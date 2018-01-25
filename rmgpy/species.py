@@ -157,11 +157,14 @@ class Species(object):
         """
         return (Species, (self.index, self.label, self.thermo, self.conformer, self.molecule, self.transportData, self.molecularWeight, self.energyTransferModel, self.reactive, self.props))
 
-    def getMolecularWeight(self):
+    @property
+    def molecularWeight(self):
+        """The molecular weight of the species. (Note: value_si is in kg/molecule not kg/mole)"""
         return self._molecularWeight
-    def setMolecularWeight(self, value):
+
+    @molecularWeight.setter
+    def molecularWeight(self, value):
         self._molecularWeight = quantity.Mass(value)
-    molecularWeight = property(getMolecularWeight, setMolecularWeight, """The molecular weight of the species. (Note: value_si is in kg/molecule not kg/mole)""")
 
     def generate_resonance_structures(self, keepIsomorphic=True):
         """
@@ -677,11 +680,14 @@ class TransitionState():
         """
         return (TransitionState, (self.label, self.conformer, self.frequency, self.tunneling, self.degeneracy))
 
-    def getFrequency(self):
+    @property
+    def frequency(self):
+        """The negative frequency of the first-order saddle point."""
         return self._frequency
-    def setFrequency(self, value):
+
+    @frequency.setter
+    def frequency(self, value):
         self._frequency = quantity.Frequency(value)
-    frequency = property(getFrequency, setFrequency, """The negative frequency of the first-order saddle point.""")
 
     def getPartitionFunction(self, T):
         """
