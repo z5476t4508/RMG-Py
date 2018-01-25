@@ -717,18 +717,27 @@ class Molecule(Graph):
     `InChI` string representing the molecular structure.
     """
 
-    def __init__(self, atoms=None, symmetry=-1, multiplicity=-187, props=None, SMILES=''):
+    def __init__(self, atoms=None, symmetry=-1, multiplicity=-187, props=None, InChI='', SMILES=''):
         Graph.__init__(self, atoms)
         self.symmetryNumber = symmetry
         self.multiplicity = multiplicity
         self._fingerprint = None
-        self.InChI = ''
-        if SMILES != '': self.fromSMILES(SMILES)
+        self._inchi = None
+        self._smiles = None
         self.props = props or {}
+
+        if InChI and SMILES:
+            logging.warning('Both InChI and SMILES provided for Molecule instantiation, using InChI and ignoring SMILES.')
+        if InChI:
+            self.fromInChI(InChI)
+            self._inchi = InChI
+        elif SMILES:
+            self.fromSMILES(SMILES)
+            self._smiles = SMILES
+
         if multiplicity != -187:  # it was set explicitly, so re-set it (fromSMILES etc may have changed it)
             self.multiplicity = multiplicity
-    
-    
+
     def __hash__(self):
         return hash((self.fingerprint))
             
@@ -808,11 +817,25 @@ class Molecule(Graph):
     def fingerprint(self, fingerprint):
         self._fingerprint = fingerprint
 
+    @property
+    def InChI(self):
+        """InChI string for this molecule. Read-only."""
+        if self._inchi is None:
+            self._inchi = self.toInChI()
+        return self._inchi
+
+    @property
+    def SMILES(self):
+        """SMILES string for this molecule. Read-only."""
+        if self._smiles is None:
+            self._smiles = self.toSMILES()
+        return self._smiles
+
     def addAtom(self, atom):
         """
         Add an `atom` to the graph. The atom is initialized with no bonds.
         """
-        self._fingerprint = None
+        self._fingerprint = self._inchi = self._smiles = None
         return self.addVertex(atom)
     
     def addBond(self, bond):
@@ -820,7 +843,7 @@ class Molecule(Graph):
         Add a `bond` to the graph as an edge connecting the two atoms `atom1`
         and `atom2`.
         """
-        self._fingerprint = None
+        self._fingerprint = self._inchi = self._smiles = None
         return self.addEdge(bond)
 
     def getBonds(self, atom):
@@ -855,7 +878,7 @@ class Molecule(Graph):
         not remove atoms that no longer have any bonds as a result of this
         removal.
         """
-        self._fingerprint = None
+        self._fingerprint = self._inchi = self._smiles = None
         return self.removeVertex(atom)
 
     def removeBond(self, bond):
@@ -864,7 +887,7 @@ class Molecule(Graph):
         Does not remove atoms that no longer have any bonds as a result of
         this removal.
         """
-        self._fingerprint = None
+        self._fingerprint = self._inchi = self._smiles = None
         return self.removeEdge(bond)
 
     def sortAtoms(self):
