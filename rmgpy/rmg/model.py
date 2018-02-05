@@ -240,63 +240,30 @@ class CoreEdgeReactionModel:
         of an existing species (i.e., was found to be isomorphic only by generating its unfiltered resonance structures)
         and True otherwise. It is emphasized that `reactive` relates to the :Class:`Molecule` attribute.
         """
-        # Create obj to check against existing species
-        # obj can be `Molecule` object or `Species` object
-
-        # For non-cyclic molecules, obj is `Molecule` object
-        # We expect it to be part of the list of isomers in a species
-        # object if it has a match
-        obj = molecule
-
-        # For cyclic molecules, obj is `Species` object and aromatic resonance
-        # isomers are generated.  This is due to the hysteresis of isomer generation
-        # for aromatic/polyaromatic compounds: not all kekulized forms can be found
-        # within the list of isomers for a species object describing a unique aromatic compound
-        if molecule.isCyclic():
-            obj = Species(molecule=[molecule])
-            from rmgpy.molecule.resonance import generate_aromatic_resonance_structures
-            aromaticIsomers = generate_aromatic_resonance_structures(molecule)
-            obj.molecule.extend(aromaticIsomers)
 
         # First check cache and return if species is found
         for i, spec in enumerate(self.speciesCache):
-            if spec is not None:
-                for mol in spec.molecule:
-                    if obj.isIsomorphic(mol):
-                        self.speciesCache.pop(i)
-                        self.speciesCache.insert(0, spec)
-                        return True, True, spec
+            if spec is not None and spec.is_same(molecule):
+                self.speciesCache.pop(i)
+                self.speciesCache.insert(0, spec)
+                # Check whether the resonance form is already included in the species
+                return True, spec.isIsomorphic(molecule), spec
 
-        # Return an existing species if a match is found
+        # If not found in cache, check all species with matching formula
         formula = molecule.getFormula()
         try:
-            speciesList = self.speciesDict[formula]
+            species_list = self.speciesDict[formula]
         except KeyError:
-            return False, False, None
-        for spec in speciesList:
-            if spec.isIsomorphic(obj):
-                self.speciesCache.pop()
-                self.speciesCache.insert(0, spec)
-                return True, True, spec
+            pass
+        else:
+            for spec in species_list:
+                if spec.is_same(molecule):
+                    self.speciesCache.pop()
+                    self.speciesCache.insert(0, spec)
+                    # Check whether the resonance form is already included in the species
+                    return True, spec.isIsomorphic(molecule), spec
 
-        # As a last resort, check using molecule.fingerprint if the object matches any existing species,
-        # and if it does, generate resonance structures w/o filtration and check for isomorphism
-        candidates = []
-        for spec in speciesList:
-            if spec.molecule[0].fingerprint == molecule.fingerprint:
-                candidates.append(spec)
-        if len(candidates) > 0:
-            mol_copy = molecule.copy(deep=True)
-            if not mol_copy.reactive:
-                mol_copy.reactive = True
-            structures = mol_copy.generate_resonance_structures(keep_isomorphic=False, filter_structures=False)
-            for spec in candidates:
-                for mol in spec.molecule:
-                    for structure in structures:
-                        if mol.isIsomorphic(structure):
-                            return True, False, spec
-
-        # At this point we can conclude that the structure does not exist
+        # At this point we can conclude that the species is new
         return False, False, None
 
     def makeNewSpecies(self, object, label='', reactive=True, checkForExisting=True):
