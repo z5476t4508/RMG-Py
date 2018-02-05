@@ -133,6 +133,10 @@ cdef class Molecule(Graph):
     cdef str _inchi
     cdef str _smiles
 
+    cpdef bint is_equal(self, Molecule other)
+
+    cpdef bint is_same(self, other)
+
     cpdef addAtom(self, Atom atom)
 
     cpdef addBond(self, Bond bond)

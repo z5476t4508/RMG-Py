@@ -757,6 +757,15 @@ class Molecule(Graph):
         else:
             return self.isIsomorphic(other)   
 
+    def is_same(self, other):
+        """
+        Chemical identity comparison via InChI strings.
+        """
+        if self.multiplicity == other.multiplicity and self.InChI == other.InChI:
+            return True
+        else:
+            return False
+
     def __str__(self):
         """
         Return a human-readable string representation of the object.
