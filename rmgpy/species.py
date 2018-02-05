@@ -159,6 +159,21 @@ class Species(object):
         """
         return (Species, (self.index, self.label, self.thermo, self.conformer, self.molecule, self.transportData, self.molecularWeight, self.energyTransferModel, self.reactive, self.props))
 
+    def is_same(self, other):
+        """
+        Chemical identity comparison via InChI strings.
+
+        Can be compared with either Species or Molecule objects.
+        """
+        if not self.molecule:
+            raise ValueError('Species must have molecule attribute to compare chemical identity.')
+        elif not isinstance(other, Molecule) and not isinstance(other, Species):
+            raise ValueError('Can only compare with Molecule or Species objects.')
+        elif self.multiplicity == other.multiplicity and self.InChI == other.InChI:
+            return True
+        else:
+            return False
+
     @property
     def fingerprint(self):
         """Fingerprint of this species, taken from molecule attribute. Read-only."""
