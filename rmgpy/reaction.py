@@ -412,24 +412,30 @@ class Reaction:
         else:
             return False
 
-    def isIsomorphic(self, other, eitherDirection=True, checkIdentical = False,
-                     checkOnlyLabel = False, checkTemplateRxnProducts=False):
+    def isIsomorphic(self, other, eitherDirection=True, level=1, checkTemplateRxnProducts=False):
         """
         Return ``True`` if this reaction is the same as the `other` reaction,
         or ``False`` if they are different. The comparison involves comparing
-        isomorphism of reactants and products, and doesn't use any kinetic
-        information.
+        reactants and products, and doesn't use any kinetic information.
+        Accepts an optional `level` argument to indicate the type of comparison,
+        with graph isomorphism being the default:
 
-        If `eitherDirection=False` then the directions must match.
+          - 0: isIdentical (isomorphism + atom ID comparison)
+          - 1: isIsomorphic (standard graph isomorphism, default)
+          - 2: is_same (InChI comparison)
+          - 3: label comparison (using ``str()`` method)
 
-        `checkIdentical` indicates that atom ID's must match and is used in
-                        checking degeneracy
-        `checkOnlyLabel` indicates that the string representation will be 
-                        checked, ignoring the molecular structure comparisons
-        `checkTemplateRxnProducts` indicates that only the products of the
+        Args:
+            other (Reaction):                 other reaction to compare to
+            eitherDirection (bool, optional): if the directions can be different
+            level (int, optional):            which comparison level to use
+            checkTemplateRxnProducts (bool, optional): Only the products of the
                         reaction are checked for isomorphism. This is used when
                         we know the reactants are identical, i.e. in generating
                         reactions.
+
+        Returns:
+            bool: True if the reactions are the same based on the comparison, False otherwise
         """
         if checkTemplateRxnProducts:
             try:
@@ -438,19 +444,13 @@ class Reaction:
             except AttributeError:
                 raise TypeError('Only use checkTemplateRxnProducts flag for TemplateReactions.')
 
-            return isomorphic_species_lists(species1, species2,
-                                            check_identical=checkIdentical,
-                                            only_check_label=checkOnlyLabel)
+            return isomorphic_species_lists(species1, species2, level=level)
 
         # Compare reactants to reactants
-        forwardReactantsMatch = isomorphic_species_lists(self.reactants, other.reactants,
-                                                         check_identical=checkIdentical,
-                                                         only_check_label=checkOnlyLabel)
+        forwardReactantsMatch = isomorphic_species_lists(self.reactants, other.reactants, level=level)
         
         # Compare products to products
-        forwardProductsMatch = isomorphic_species_lists(self.products, other.products,
-                                                        check_identical=checkIdentical,
-                                                        only_check_label=checkOnlyLabel)
+        forwardProductsMatch = isomorphic_species_lists(self.products, other.products, level=level)
 
         # Compare specificCollider to specificCollider
         ColliderMatch = (self.specificCollider == other.specificCollider)
@@ -462,17 +462,13 @@ class Reaction:
             return False
         
         # Compare reactants to products
-        reverseReactantsMatch = isomorphic_species_lists(self.reactants, other.products,
-                                                         check_identical=checkIdentical,
-                                                         only_check_label=checkOnlyLabel)
+        reverseReactantsMatch = isomorphic_species_lists(self.reactants, other.products, level=level)
 
         # Compare products to reactants
-        reverseProductsMatch = isomorphic_species_lists(self.products, other.reactants,
-                                                        check_identical=checkIdentical,
-                                                        only_check_label=checkOnlyLabel)
+        reverseProductsMatch = isomorphic_species_lists(self.products, other.reactants, level=level)
 
         # should have already returned if it matches forwards, or we're not allowed to match backwards
-        return  (reverseReactantsMatch and reverseProductsMatch and ColliderMatch)
+        return reverseReactantsMatch and reverseProductsMatch and ColliderMatch
 
     def getEnthalpyOfReaction(self, T):
         """
@@ -1152,28 +1148,40 @@ class Reaction:
         except AttributeError:
             pass
 
-def isomorphic_species_lists(list1, list2, check_identical=False, only_check_label=False):
+def isomorphic_species_lists(list1, list2, level=1):
     """
-    This method compares whether lists of species or molecules are isomorphic
-    or identical. It is used for the 'isIsomorphic' method of Reaction class.
-    It likely can be useful elswehere as well:
-        
-        list1 - list of species/molecule objects of reaction1
-        list2 - list of species/molecule objects of reaction2
-        check_identical - if true, uses the 'isIdentical' comparison
-                          if false, uses the 'isIsomorphic' comparison
-        only_check_label - only look at species' labels, no isomorphism checks
-                         
-    Returns True if the lists are isomorphic/identical & false otherwise
+    This method compares whether lists of species or molecules are the same
+    based on the specified comparison type, ignoring order. It is used for
+    the 'isIsomorphic' method of :class:`Reaction` and can be used in other
+    contexts as well. Accepts an optional `level` argument to indicate the
+    type of comparison, with graph isomorphism being the default:
+
+      - 0: isIdentical (isomorphism + atom ID comparison)
+      - 1: isIsomorphic (standard graph isomorphism, default)
+      - 2: is_same (InChI comparison)
+      - 3: label comparison (using ``str()`` method)
+
+    Args:
+        list1 (list):          list of species/molecule objects of reaction1
+        list2 (list):          list of species/molecule objects of reaction2
+        level (int, optional): which comparison level to use
+
+    Returns:
+        bool: True if the lists are the same based on the comparison, False otherwise
     """
 
-    def same(object1, object2, _check_identical=check_identical, _only_check_label=only_check_label):
-        if _only_check_label:
-            return str(object1) == str(object2)
-        elif _check_identical:
+    def same(object1, object2, level=level):
+        if level == 0:
             return object1.isIdentical(object2)
-        else:
+        elif level == 1:
             return object1.isIsomorphic(object2)
+        elif level == 2:
+            return object1.is_same(object2)
+        elif level == 3:
+            return str(object1) == str(object2)
+        else:
+            raise ValueError('Unrecognized value {0} for level. '
+                             'Should be one of 0, 1, 2, or 3.'.format(level))
 
     if len(list1) == len(list2) == 1:
         if same(list1[0], list2[0]):

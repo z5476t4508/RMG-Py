@@ -112,10 +112,10 @@ class TestReactionIsomorphism(unittest.TestCase):
         self.assertFalse(r1.isIsomorphic(self.makeReaction('abe=cde')))
     def test2to3_usingCheckOnlyLabel(self):
         r1 = self.makeReaction('AB=CDE')
-        self.assertTrue(r1.isIsomorphic(self.makeReaction('AB=CDE'),checkOnlyLabel=True))
-        self.assertTrue(r1.isIsomorphic(self.makeReaction('BA=EDC'),eitherDirection=False,checkOnlyLabel=True))
-        self.assertFalse(r1.isIsomorphic(self.makeReaction('Ab=CDE'),checkOnlyLabel=True))
-        self.assertFalse(r1.isIsomorphic(self.makeReaction('BA=EDd'),eitherDirection=False,checkOnlyLabel=True))
+        self.assertTrue(r1.isIsomorphic(self.makeReaction('AB=CDE'), level=3))
+        self.assertTrue(r1.isIsomorphic(self.makeReaction('BA=EDC'),eitherDirection=False, level=3))
+        self.assertFalse(r1.isIsomorphic(self.makeReaction('Ab=CDE'), level=3))
+        self.assertFalse(r1.isIsomorphic(self.makeReaction('BA=EDd'),eitherDirection=False, level=3))
 
 
 class TestReaction(unittest.TestCase):

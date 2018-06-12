@@ -437,7 +437,7 @@ class PressureDependenceJob(object):
                 reaction = self.network.netReactions[count]
                 count += 1
                 # make sure we aren't double counting any reactions
-                if not any([reaction.isIsomorphic(other_rxn,checkOnlyLabel=True) \
+                if not any([reaction.isIsomorphic(other_rxn, level=3) \
                             for other_rxn in printed_reactions]):
                     duplicate = False
                     # add reaction to printed reaction
