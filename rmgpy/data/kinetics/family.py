@@ -1436,7 +1436,7 @@ class KineticsFamily(Database):
         """
 
         # Make sure the products are in fact different than the reactants
-        if isomorphic_species_lists(reactants, products):
+        if isomorphic_species_lists(reactants, products, level=2):
             return None
 
         # Create and return template reaction object
@@ -1841,17 +1841,13 @@ class KineticsFamily(Database):
             
                 products0 = reaction.products[:] if forward else reaction.reactants[:]
 
-                # For aromatics, generate aromatic resonance structures to accurately identify isomorphic species
-                if prod_resonance:
-                    for i, product in enumerate(products0):
-                        if product.isCyclic:
-                            aromaticStructs = generate_aromatic_resonance_structures(product)
-                            if aromaticStructs:
-                                products0[i] = aromaticStructs[0]
-
                 # Skip reactions that don't match the given products
-                if isomorphic_species_lists(products, products0):
-                    rxnList.append(reaction)
+                if prod_resonance:
+                    if isomorphic_species_lists(products, products0, level=2):
+                        rxnList.append(reaction)
+                else:
+                    if isomorphic_species_lists(products, products0, level=1):
+                        rxnList.append(reaction)
 
         # Determine the reactant-product pairs to use for flux analysis
         # Also store the reaction template (useful so we can easily get the kinetics later)
@@ -2218,7 +2214,7 @@ class KineticsFamily(Database):
                 pass
             else:
                 if product_structures is not None:
-                    if isomorphic_species_lists(list(products), list(product_structures)):
+                    if isomorphic_species_lists(list(products), list(product_structures), level=2):
                         return reactant_structures, product_structures
                     else:
                         continue
