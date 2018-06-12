@@ -457,6 +457,21 @@ def _check_output(mol, identifier):
     if 'InChI=1' in identifier:
         inchi_elementcount = util.retrieveElementCount(identifier)
         mol_elementcount = util.retrieveElementCount(mol)
+
+        # Check for isotopes
+        if '/i' in identifier:
+            found = False
+            for key, count in mol_elementcount.items():
+                if isinstance(key, tuple):
+                    # Add to the corresponding symbol
+                    mol_elementcount[key[0]] += count
+                    # Indicate that we found an isotope
+                    found = True
+                    # Remove the entry from the dictionary
+                    del mol_elementcount[key]
+            # If we didn't find anything, that would mean the result is wrong
+            conditions.append(found)
+
         conditions.append(inchi_elementcount == mol_elementcount)
 
     return all(conditions)
