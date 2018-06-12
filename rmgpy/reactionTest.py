@@ -72,50 +72,109 @@ class TestReactionIsomorphism(unittest.TestCase):
     """
 
     def makeReaction(self,reaction_string):
-        """"
+        """
         Make a Reaction (containing PseudoSpecies) of from a string like 'Ab=CD'
         """
         reactants, products = reaction_string.split('=')
         reactants = [PseudoSpecies(i) for i in reactants]
         products = [PseudoSpecies(i) for i in products]
         return Reaction(reactants=reactants, products=products)
+
     def test1to1(self):
+        """Test reaction isomorphism with 1 reactant and 1 product."""
         r1 = self.makeReaction('A=B')
         self.assertTrue(r1.isIsomorphic(self.makeReaction('a=B')))
         self.assertTrue(r1.isIsomorphic(self.makeReaction('b=A')))
-        self.assertFalse(r1.isIsomorphic(self.makeReaction('B=a'),eitherDirection=False))
+        self.assertFalse(r1.isIsomorphic(self.makeReaction('B=a'), eitherDirection=False))
         self.assertFalse(r1.isIsomorphic(self.makeReaction('A=C')))
         self.assertFalse(r1.isIsomorphic(self.makeReaction('A=BB')))
+
     def test1to2(self):
+        """Test reaction isomorphism with 1 reactant and 2 products."""
         r1 = self.makeReaction('A=BC')
         self.assertTrue(r1.isIsomorphic(self.makeReaction('a=Bc')))
         self.assertTrue(r1.isIsomorphic(self.makeReaction('cb=a')))
-        self.assertTrue(r1.isIsomorphic(self.makeReaction('a=cb'),eitherDirection=False))
-        self.assertFalse(r1.isIsomorphic(self.makeReaction('bc=a'),eitherDirection=False))
+        self.assertTrue(r1.isIsomorphic(self.makeReaction('a=cb'), eitherDirection=False))
+        self.assertFalse(r1.isIsomorphic(self.makeReaction('bc=a'), eitherDirection=False))
         self.assertFalse(r1.isIsomorphic(self.makeReaction('a=c')))
         self.assertFalse(r1.isIsomorphic(self.makeReaction('ab=c')))
+
     def test2to2(self):
+        """Test reaction isomorphism with 2 reactants and 2 products."""
         r1 = self.makeReaction('AB=CD')
         self.assertTrue(r1.isIsomorphic(self.makeReaction('ab=cd')))
-        self.assertTrue(r1.isIsomorphic(self.makeReaction('ab=dc'),eitherDirection=False))
+        self.assertTrue(r1.isIsomorphic(self.makeReaction('ab=dc'), eitherDirection=False))
         self.assertTrue(r1.isIsomorphic(self.makeReaction('dc=ba')))
-        self.assertFalse(r1.isIsomorphic(self.makeReaction('cd=ab'),eitherDirection=False))
+        self.assertFalse(r1.isIsomorphic(self.makeReaction('cd=ab'), eitherDirection=False))
         self.assertFalse(r1.isIsomorphic(self.makeReaction('ab=ab')))
         self.assertFalse(r1.isIsomorphic(self.makeReaction('ab=cde')))
+
     def test2to3(self):
+        """Test reaction isomorphism with 2 reactant and 3 products."""
         r1 = self.makeReaction('AB=CDE')
         self.assertTrue(r1.isIsomorphic(self.makeReaction('ab=cde')))
-        self.assertTrue(r1.isIsomorphic(self.makeReaction('ba=edc'),eitherDirection=False))
+        self.assertTrue(r1.isIsomorphic(self.makeReaction('ba=edc'), eitherDirection=False))
         self.assertTrue(r1.isIsomorphic(self.makeReaction('dec=ba')))
-        self.assertFalse(r1.isIsomorphic(self.makeReaction('cde=ab'),eitherDirection=False))
+        self.assertFalse(r1.isIsomorphic(self.makeReaction('cde=ab'), eitherDirection=False))
         self.assertFalse(r1.isIsomorphic(self.makeReaction('ab=abc')))
         self.assertFalse(r1.isIsomorphic(self.makeReaction('abe=cde')))
+
     def test2to3_usingCheckOnlyLabel(self):
+        """Test reaction isomorphism with only label comparison."""
         r1 = self.makeReaction('AB=CDE')
         self.assertTrue(r1.isIsomorphic(self.makeReaction('AB=CDE'), level=3))
-        self.assertTrue(r1.isIsomorphic(self.makeReaction('BA=EDC'),eitherDirection=False, level=3))
+        self.assertTrue(r1.isIsomorphic(self.makeReaction('BA=EDC'), eitherDirection=False, level=3))
         self.assertFalse(r1.isIsomorphic(self.makeReaction('Ab=CDE'), level=3))
-        self.assertFalse(r1.isIsomorphic(self.makeReaction('BA=EDd'),eitherDirection=False, level=3))
+        self.assertFalse(r1.isIsomorphic(self.makeReaction('BA=EDd'), eitherDirection=False, level=3))
+
+    def test_all_levels(self):
+        """Test that all levels of isIsomorphic behave as expected."""
+        # Create species and assign atom IDs
+        a = Species(label='a').fromSMILES('C')
+        for i, atom in enumerate(a.molecule[0].atoms):
+            atom.id = i
+        b = Species(label='b').fromSMILES('[CH3]')
+        for i, atom in enumerate(b.molecule[0].atoms):
+            atom.id = i
+        c = Species(label='c').fromSMILES('[H]')
+        c.molecule[0].atoms[0].id = 4
+
+        # Create reactions
+        rxn1 = Reaction(reactants=[a], products=[b, c])
+        rxn2 = rxn1.copy()
+
+        # Compare
+        for level in range(4):
+            self.assertTrue(rxn1.isIsomorphic(rxn2, level=level))
+
+        # Change atom IDs of rxn2
+        rxn2.products[0].molecule[0].atoms[-1].id = 4
+        rxn2.products[1].molecule[0].atoms[0].id = 3
+
+        # Compare
+        for level in range(4):
+            if level == 0:
+                self.assertFalse(rxn1.isIsomorphic(rxn2, level=level))
+            else:
+                self.assertTrue(rxn1.isIsomorphic(rxn2, level=level))
+
+        # Change products of rxn2 (not physical, but it's fine)
+        d = Species(label='c').fromSMILES('[H][H]')
+        rxn2.products[1] = d
+
+        # Compare
+        for level in range(4):
+            if level <= 2:
+                self.assertFalse(rxn1.isIsomorphic(rxn2, level=level))
+            else:
+                self.assertTrue(rxn1.isIsomorphic(rxn2, level=level))
+
+        # Change label of rxn2
+        rxn2.products[1].label = 'd'
+
+        # Compare
+        for level in range(4):
+            self.assertFalse(rxn1.isIsomorphic(rxn2, level=level))
 
 
 class TestReaction(unittest.TestCase):
