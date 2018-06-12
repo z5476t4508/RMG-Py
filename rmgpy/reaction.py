@@ -394,18 +394,20 @@ class Reaction:
         Compares the provided reactants and products against the reactants
         and products of this reaction. Both directions are checked.
 
+        Uses level 2 of `isomorphis_species_lists`, which compares InChI.
+
         Args:
             reactants (list): Species required on one side of the reaction
             products (list, optional): Species required on the other side
         """
         # Check forward direction
         if isomorphic_species_lists(self.reactants, reactants):
-            if products is None or isomorphic_species_lists(self.products, products):
+            if products is None or isomorphic_species_lists(self.products, products, level=2):
                 return True
             else:
                 return False
         elif isomorphic_species_lists(self.products, reactants):
-            if products is None or isomorphic_species_lists(self.reactants, products):
+            if products is None or isomorphic_species_lists(self.reactants, products, level=2):
                 return True
             else:
                 return False
