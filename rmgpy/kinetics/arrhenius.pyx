@@ -453,7 +453,7 @@ cdef class ArrheniusBM(KineticsModel):
     
     """
     
-    def __init__(self, A=None, n=0.0, w0=0.0, E0=None, Tmin=None, Tmax=None, Pmin=None, Pmax=None, comment=''):
+    def __init__(self, A=None, n=0.0, w0=(0.0,'J/mol'), E0=None, Tmin=None, Tmax=None, Pmin=None, Pmax=None, comment=''):
         KineticsModel.__init__(self, Tmin=Tmin, Tmax=Tmax, Pmin=Pmin, Pmax=Pmax, comment=comment)
         self.A = A
         self.n = n
