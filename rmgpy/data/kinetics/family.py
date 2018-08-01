@@ -3069,6 +3069,16 @@ class KineticsFamily(Database):
         
         return rxns
     
+    def isEntryMatch(self,mol,entry):
+        """
+        determines if the labeled molecule object of reactants matches the entry entry
+        """
+        if isinstance(entry.item,Group):
+            structs = mol.generate_resonance_structures()
+            return any([mol.isSubgraphIsomorphic(entry.item,generateInitialMap=True) for mol in structs])
+        elif isinstance(entry.item,LogicOr):
+            return any([self.isEntryMatch(mol,self.groups.entries[c]) for c in entry.item.components])
+        
     def retrieveOriginalEntry(self, templateLabel):
         """
         Retrieves the original entry, be it a rule or training reaction, given
