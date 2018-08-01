@@ -2944,7 +2944,7 @@ class KineticsFamily(Database):
             for child in self.getRootTemplate()[0].children: #don't regularize the root
                 regularization(self,child)
         else:
-            regularization(self,self.getRootTemplate[0])
+            regularization(self,self.getRootTemplate()[0])
         
     def prepareTreeForGeneration(self,thermoDatabase=None):
         """
