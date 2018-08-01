@@ -1152,7 +1152,7 @@ class Group(Graph):
                         elif typ[0].label == 'R!H':
                             extents.extend(self.specifyAtomExtensions(i,basename,list(set(atm.reg_dim_atm) & set(R)))) 
                     else:
-                        extents.extend(self.specifyAtomExtensions(i,basename,list(set(typ) & set(atm.reg_dim-atm))))
+                        extents.extend(self.specifyAtomExtensions(i,basename,list(set(typ) & set(atm.reg_dim_atm))))
                 if atm.reg_dim_u == []:
                     if len(atm.radicalElectrons) != 1:
                         if len(atm.radicalElectrons) == 0:
@@ -1212,7 +1212,7 @@ class Group(Graph):
                     elif typ[0].label == 'R!H':
                         extents.extend(self.specifyAtomExtensions(i,basename,list(set(atm.reg_dim_atm) & set(R)))) 
                 else:
-                    extents.extend(self.specifyAtomExtensions(i,basename,list(set(typ) & set(atm.reg_dim-atm))))
+                    extents.extend(self.specifyAtomExtensions(i,basename,list(set(typ) & set(atm.reg_dim_atm))))
             if atm.reg_dim_u == []:
                 if len(atm.radicalElectrons) != 1:
                     if len(atm.radicalElectrons) == 0:
