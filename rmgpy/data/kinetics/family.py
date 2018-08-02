@@ -2972,8 +2972,6 @@ class KineticsFamily(Database):
             path = settings['database.directory']
             path = os.path.join(path,'kinetics','families',self.label)
         
-        self.rules.entries = OrderedDict() #have to clear the new rules made
-        
         self.save(path)
     
     def getTrainingSet(self, thermoDatabase=None, removeDegeneracy=False):
