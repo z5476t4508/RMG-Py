@@ -2846,7 +2846,7 @@ class KineticsFamily(Database):
         """
         self.rules.entries = OrderedDict() #clear rules
         self.rules.entries['Root'] = []
-        templateRxnMap = self.getReactionMatches(thermoDatabase=thermoDatabase,removeDegeneracy=True)
+        templateRxnMap = self.getReactionMatches(thermoDatabase=thermoDatabase,removeDegeneracy=True,fixLabels=True)
         
         multCompletedNodes = [] #nodes containing multiple identical training reactions
         boo = True #if the for loop doesn't break becomes false and the while loop terminates
@@ -3135,7 +3135,7 @@ class KineticsFamily(Database):
         
         self.save(path)
     
-    def getTrainingSet(self, thermoDatabase=None, removeDegeneracy=False, estimateThermo=True):
+    def getTrainingSet(self, thermoDatabase=None, removeDegeneracy=False, estimateThermo=True, fixLabels=False):
         """
         retrieves all reactions in the training set, assigns thermo to the species objects
         reverses reactions as necessary so that all reactions are in the forward direction
@@ -3167,6 +3167,8 @@ class KineticsFamily(Database):
             else:
                 root = deepcopy(r)
         
+        if fixLabels:
+            rootLabels = [x.label for x in root.atoms if x.label != '']
         
         for i,r in enumerate(entries):
             if estimateThermo:
@@ -3191,6 +3193,11 @@ class KineticsFamily(Database):
                 else:
                     mol = deepcopy(react.molecule[0])
             
+            if fixLabels:
+                for atm in mol.atoms:
+                    if atm.label not in rootLabels:
+                        atm.label = ''
+                        
             structs = mol.generate_resonance_structures()
             
             
@@ -3234,13 +3241,13 @@ class KineticsFamily(Database):
         
         return rxns
     
-    def getReactionMatches(self,rxns=None,thermoDatabase=None,removeDegeneracy=False,estimateThermo=True):
+    def getReactionMatches(self,rxns=None,thermoDatabase=None,removeDegeneracy=False,estimateThermo=True,fixLabels=False):
         """
         returns a dictionary mapping for each entry in the tree:  
         (entry.label,entry.item) : list of all training reactions (or the list given) that match that entry
         """
         if rxns is None:
-            rxns = self.getTrainingSet(thermoDatabase=thermoDatabase,removeDegeneracy=removeDegeneracy,estimateThermo=estimateThermo)
+            rxns = self.getTrainingSet(thermoDatabase=thermoDatabase,removeDegeneracy=removeDegeneracy,estimateThermo=estimateThermo,fixLabels=fixLabels)
         
         entries = self.groups.entries
         
