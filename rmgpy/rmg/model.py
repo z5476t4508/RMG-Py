@@ -55,6 +55,7 @@ from rmgpy.data.kinetics.library import KineticsLibrary, LibraryReaction
 from rmgpy.kinetics import KineticsData, Arrhenius
 import rmgpy.data.rmg
 from .react import reactAll
+from rmgpy.data.kinetics.common import ensure_independent_atom_ids
 
 from pdep import PDepReaction, PDepNetwork
 
@@ -674,7 +675,15 @@ class CoreEdgeReactionModel:
 
             rxns = reactAll(self.core.species, numOldCoreSpecies,
                             unimolecularReact, bimolecularReact, trimolecularReact=trimolecularReact)
-            spcs = [self.retrieveNewSpecies(rxn) for rxn in rxns]
+            #spcs = [self.retrieveNewSpecies(rxn) for rxn in rxns]
+
+            # get new species and save in spcs
+            spcs = []
+            for rxn in rxns:
+                spcs.extend(rxn.reactants)
+                spcs.extend(rxn.products)
+
+            ensure_independent_atom_ids(spcs, resonance=True) 
             
             for rxn, spc in zip(rxns, spcs):
                 rxn = self.inflate(rxn) 
