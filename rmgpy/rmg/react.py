@@ -35,6 +35,8 @@ import itertools
 import logging
 import resource
 import psutil
+import os
+from sys import platform
 
 from rmgpy.data.rmg import getDB
 from multiprocessing import Pool
@@ -57,14 +59,30 @@ def react(*spcTuples):
     """
 
     from rmgpy.rmg.main import maxproc
-    
-    # Available RAM memory (kB)
-    mem = psutil.virtual_memory()
-    usermem = mem.available
-    
-    tmp = divmod(usermem, resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-    tmp2 = min(maxproc, tmp[0])
-    procnum = max(1, tmp2)
+   
+    # Get available RAM (GB)and procnum dependent on OS
+    if platform.startswith('linux'):
+        # linux
+        memoryavailable = psutil.virtual_memory().free / (1000.0 ** 3)
+        memoryuse = psutil.Process(os.getpid()).memory_info()[0]/(1000.0 ** 3)
+        tmp = divmod(memoryavailable, memoryuse)
+        logging.info("Memory use is {0} GB, available memory is {2} GB and max allowed "
+                     "number of processes is {1}.".format(memoryuse, tmp[0], memoryavailable))
+        tmp2 = min(maxproc, tmp[0])
+        procnum = max(1, int(tmp2))
+    elif platform == "darwin":
+        # OS X
+        memoryavailable = psutil.virtual_memory().available/(1000.0 ** 3)
+        memoryuse = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1000.0 ** 3)
+        tmp = divmod(memoryavailable, memoryuse)
+        logging.info("Memory use is {0} GB, available memory is {2} GB and max allowed "
+                     "number of processes is {1}.".format(memoryuse, tmp[0], memoryavailable))
+        tmp2 = min(maxproc, tmp[0])
+        procnum = max(1, int(tmp2))
+    else:
+        # Everything else
+        procnum = 1
+
     logging.info('For reaction generation {0} processes are used.'.format(procnum))
 
     # Execute multiprocessing map. It blocks until the result is ready.
@@ -75,6 +93,7 @@ def react(*spcTuples):
     reactions = p.map(
                 reactSpecies,
                 spcTuples)
+
     p.close()
     p.join()
 
@@ -85,9 +104,8 @@ def reactSpecies(speciesTuple):
     """
     Given a tuple of Species objects, generates all possible reactions
     from the loaded reaction families and combines degenerate reactions.
-
-    The generated reactions are deflated.
     """
+
     speciesTuple = tuple([spc.copy(deep=True) for spc in speciesTuple])
 
     reactions = getDB('kinetics').generate_reactions_from_families(speciesTuple)
@@ -123,4 +141,5 @@ def reactAll(coreSpcList, numOldCoreSpecies, unimolecularReact, bimolecularReact
                             spcTuples.append((coreSpcList[i], coreSpcList[j], coreSpcList[k]))
 
     rxns = list(react(*spcTuples))
+    
     return rxns
