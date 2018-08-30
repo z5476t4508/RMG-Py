@@ -39,8 +39,6 @@ import time
 import logging
 import os
 import shutil
-import psutil
-import resource
 
 import numpy as np
 import gc

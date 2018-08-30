@@ -43,7 +43,7 @@ from multiprocessing import Pool
 
 def react(*spcTuples):
     """
-    Generate reactions between the species in the 
+    Generate reactions between the species in the
     list of species tuples for all the reaction families available.
 
     For each tuple of one or more Species objects [(spc1,), (spc2, spc3), ...]
@@ -59,7 +59,7 @@ def react(*spcTuples):
     """
 
     from rmgpy.rmg.main import maxproc
-   
+
     # Get available RAM (GB)and procnum dependent on OS
     if platform.startswith('linux'):
         # linux
@@ -86,10 +86,10 @@ def react(*spcTuples):
     logging.info('For reaction generation {0} processes are used.'.format(procnum))
 
     # Execute multiprocessing map. It blocks until the result is ready.
-    # This method chops the iterable into a number of chunks which it 
-    # submits to the process pool as separate tasks. 
+    # This method chops the iterable into a number of chunks which it
+    # submits to the process pool as separate tasks.
     p = Pool(processes=procnum)
-    
+
     reactions = p.map(
                 reactSpecies,
                 spcTuples)
@@ -141,5 +141,5 @@ def reactAll(coreSpcList, numOldCoreSpecies, unimolecularReact, bimolecularReact
                             spcTuples.append((coreSpcList[i], coreSpcList[j], coreSpcList[k]))
 
     rxns = list(react(*spcTuples))
-    
+
     return rxns
