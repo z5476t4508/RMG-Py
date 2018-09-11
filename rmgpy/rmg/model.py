@@ -675,7 +675,6 @@ class CoreEdgeReactionModel:
 
             rxns = reactAll(self.core.species, numOldCoreSpecies,
                             unimolecularReact, bimolecularReact, trimolecularReact=trimolecularReact)
-            #spcs = [self.retrieveNewSpecies(rxn) for rxn in rxns]
 
             # get new species and save in spcs
             spcs = []
@@ -686,11 +685,6 @@ class CoreEdgeReactionModel:
             ensure_independent_atom_ids(spcs, resonance=True) 
             
             for rxn, spc in zip(rxns, spcs):
-                rxn = self.inflate(rxn) 
-                try:
-                    rxn.reverse = self.inflate(rxn.reverse)
-                except AttributeError, e:
-                    pass
                 self.processNewReactions([rxn], spc)
 
         ################################################################
@@ -1946,20 +1940,6 @@ class CoreEdgeReactionModel:
                 raise e
 
         return obj
-
-    def retrieveNewSpecies(self, deflatedRxn):
-        """
-        Searches for the first reactant or product in the deflated reaction
-        that is represented by an integer.
-
-        Such an object refers to a core species that was used to generate the
-        reaction in the first place. Reactants or products represented by an
-        object that is not an integer will be a newly-generated structure.
-        """
-        for obj in itertools.chain(deflatedRxn.reactants, deflatedRxn.products):
-            if isinstance(obj, int):
-                return self.getSpecies(obj)
-        raise Exception("No core species were found in either reactants or products of {0}!".format(deflatedRxn))
 
 
 def generateReactionKey(rxn, useProducts=False):
