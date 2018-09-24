@@ -103,7 +103,7 @@ def toRDKitMol(mol, removeHs=True, returnMapping=False, sanitize=True):
     return rdkitmol
 
 
-def fromRDKitMol(mol, rdkitmol):
+def fromRDKitMol(mol, rdkitmol, raise_atomtype_exception=True):
     """
     Convert a RDKit Mol object `rdkitmol` to a molecular structure. Uses
     `RDKit <http://rdkit.org/>`_ to perform the conversion.
@@ -162,7 +162,7 @@ def fromRDKitMol(mol, rdkitmol):
     # We need to update lone pairs first because the charge was set by RDKit
     mol.updateLonePairs()
     # Set atom types and connectivity values
-    mol.update()
+    mol.update(raise_atomtype_exception=raise_atomtype_exception)
 
     # Assume this is always true
     # There are cases where 2 radicalElectrons is a singlet, but
@@ -238,7 +238,7 @@ def toOBMol(mol, returnMapping=False):
     return obmol
 
 
-def fromOBMol(mol, obmol):
+def fromOBMol(mol, obmol, raise_atomtype_exception=True):
     """
     Convert a OpenBabel Mol object `obmol` to a molecular structure. Uses
     `OpenBabel <http://openbabel.org/>`_ to perform the conversion.
@@ -283,7 +283,7 @@ def fromOBMol(mol, obmol):
 
     # Set atom types and connectivity values
     mol.updateConnectivityValues()
-    mol.updateAtomTypes()
+    mol.updateAtomTypes(logSpecies=True, raiseException=raise_atomtype_exception)
     mol.updateMultiplicity()
     mol.identifyRingMembership()
 

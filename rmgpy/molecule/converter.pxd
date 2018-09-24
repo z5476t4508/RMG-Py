@@ -30,8 +30,8 @@ cimport rmgpy.molecule.molecule as mm
 
 cpdef toRDKitMol(mm.Molecule mol, bint removeHs=*, bint returnMapping=*, bint sanitize=*)
 
-cpdef mm.Molecule fromRDKitMol(mm.Molecule mol, object rdkitmol)
+cpdef mm.Molecule fromRDKitMol(mm.Molecule mol, object rdkitmolm, bint raise_atomtype_exception=?)
 
 cpdef toOBMol(mm.Molecule mol, bint returnMapping=*)
 
-cpdef mm.Molecule fromOBMol(mm.Molecule mol, object obmol)
+cpdef mm.Molecule fromOBMol(mm.Molecule mol, object obmol, bint raise_atomtype_exception=?)

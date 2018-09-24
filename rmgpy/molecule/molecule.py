@@ -885,7 +885,7 @@ class Molecule(Graph):
         for index, vertex in enumerate(self.vertices):
             vertex.sortingLabel = index
 
-    def update(self, log_species=True):
+    def update(self, log_species=True, raise_atomtype_exception=True):
         """
         Update connectivity values, atom types of atoms.
         Update multiplicity, and sort atoms using the new
@@ -895,7 +895,7 @@ class Molecule(Graph):
         for atom in self.atoms:
             atom.updateCharge()
 
-        self.updateAtomTypes(logSpecies=log_species)
+        self.updateAtomTypes(logSpecies=log_species, raiseException=raise_atomtype_exception)
         self.updateMultiplicity()
         self.sortAtoms()
         self.identifyRingMembership()
@@ -1043,7 +1043,7 @@ class Molecule(Graph):
         for atom in hydrogens:
             self.removeAtom(atom)
 
-    def connectTheDots(self):
+    def connectTheDots(self, raise_atomtype_exception=True):
         """
         Delete all bonds, and set them again based on the Atoms' coords.
         Does not detect bond type.
@@ -1086,7 +1086,7 @@ class Molecule(Graph):
                     # groupBond = GroupBond(atom1, atom2, [1,2,3,1.5])
                     bond = Bond(atom1, atom2, 1)
                     self.addBond(bond)
-        self.updateAtomTypes()
+        self.updateAtomTypes(raiseException=raise_atomtype_exception)
         
     def updateAtomTypes(self, logSpecies=True, raiseException=True):
         """
@@ -1356,37 +1356,37 @@ class Molecule(Graph):
         os.unlink(tempFileName)
         return png
 
-    def fromInChI(self, inchistr, backend='try-all'):
+    def fromInChI(self, inchistr, backend='try-all', raise_atomtype_exception=True):
         """
         Convert an InChI string `inchistr` to a molecular structure.
         """
-        translator.fromInChI(self, inchistr, backend)
+        translator.fromInChI(self, inchistr, backend, raise_atomtype_exception=raise_atomtype_exception)
         return self
 
-    def fromAugmentedInChI(self, aug_inchi):
+    def fromAugmentedInChI(self, aug_inchi, raise_atomtype_exception=True):
         """
         Convert an Augmented InChI string `aug_inchi` to a molecular structure.
         """
-        translator.fromAugmentedInChI(self, aug_inchi)
+        translator.fromAugmentedInChI(self, aug_inchi, raise_atomtype_exception=raise_atomtype_exception)
         return self
 
-    def fromSMILES(self, smilesstr, backend='try-all'):
+    def fromSMILES(self, smilesstr, backend='try-all', raise_atomtype_exception=True):
         """
         Convert a SMILES string `smilesstr` to a molecular structure.
         """
-        translator.fromSMILES(self, smilesstr, backend)
+        translator.fromSMILES(self, smilesstr, backend, raise_atomtype_exception=raise_atomtype_exception)
         return self
         
-    def fromSMARTS(self, smartsstr):
+    def fromSMARTS(self, smartsstr, raise_atomtype_exception=True):
         """
         Convert a SMARTS string `smartsstr` to a molecular structure. Uses
         `RDKit <http://rdkit.org/>`_ to perform the conversion.
         This Kekulizes everything, removing all aromatic atom types.
         """
-        translator.fromSMARTS(self, smartsstr)
+        translator.fromSMARTS(self, smartsstr, raise_atomtype_exception=raise_atomtype_exception)
         return self
 
-    def fromAdjacencyList(self, adjlist, saturateH=False):
+    def fromAdjacencyList(self, adjlist, saturateH=False, raise_atomtype_exception=True):
         """
         Convert a string adjacency list `adjlist` to a molecular structure.
         Skips the first line (assuming it's a label) unless `withLabel` is
@@ -1395,7 +1395,7 @@ class Molecule(Graph):
         from .adjlist import fromAdjacencyList
         
         self.vertices, self.multiplicity = fromAdjacencyList(adjlist, group=False, saturateH=saturateH)
-        self.updateAtomTypes()
+        self.updateAtomTypes(raiseException=raise_atomtype_exception)
         self.identifyRingMembership()
         
         # Check if multiplicity is possible
@@ -1407,7 +1407,7 @@ class Molecule(Graph):
             raise ValueError('Non-neutral molecule encountered. Currently, RMG does not support ion chemistry.\n {0}'.format(adjlist))
         return self
         
-    def fromXYZ(self, atomicNums, coordinates):
+    def fromXYZ(self, atomicNums, coordinates, raise_atomtype_exception=True):
         """
         Create an RMG molecule from a list of coordinates and a corresponding
         list of atomic numbers. These are typically received from CCLib and the
@@ -1420,9 +1420,9 @@ class Molecule(Graph):
             atom = Atom(_rdkit_periodic_table.GetElementSymbol(int(atNum)))
             atom.coords = coordinates[i]
             self.addAtom(atom)
-        return self.connectTheDots()
+        return self.connectTheDots(raise_atomtype_exception=raise_atomtype_exception)
     
-    def toSingleBonds(self):
+    def toSingleBonds(self, raise_atomtype_exception=True):
         """
         Returns a copy of the current molecule, consisting of only single bonds.
         
@@ -1442,7 +1442,7 @@ class Molecule(Graph):
             for atom2 in atom1.bonds:
                 bond = Bond(mapping[atom1], mapping[atom2], 1)
                 newMol.addBond(bond)
-        newMol.updateAtomTypes()
+        newMol.updateAtomTypes(raiseException=raise_atomtype_exception)
         return newMol
 
     def toInChI(self):
@@ -1839,7 +1839,7 @@ class Molecule(Graph):
         saturator.saturate(self.atoms)
         if update: self.update()
 
-    def saturate_radicals(self):
+    def saturate_radicals(self, raise_atomtype_exception=True):
         """
         Saturate the molecule by replacing all radicals with bonds to hydrogen atoms.  Changes self molecule object.  
         """
@@ -1861,7 +1861,7 @@ class Molecule(Graph):
         # changing atom types, but it doesn't hurt anything and is not
         # very expensive, so will do it anyway)
         self.sortAtoms()
-        self.updateAtomTypes()
+        self.updateAtomTypes(raiseException=raise_atomtype_exception)
         self.multiplicity = 1
 
         return added
