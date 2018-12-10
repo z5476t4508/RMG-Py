@@ -47,7 +47,7 @@ class TestGroupAdjLists(unittest.TestCase):
 
     def testFromOldAdjacencyList1(self):
         """
-        adjlist: Test the Group.fromAdjacencyList() method on an old style adjacency list.
+        adjlist: Test the Group.fromAdjacencyList() methodd on an old style adjacency list.
         """
         adjlist = """
 1 *2 {Cs,Cd} 0 {2,{S,D}} {3,S}
