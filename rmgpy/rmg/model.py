@@ -59,7 +59,7 @@ from rmgpy.data.kinetics.library import KineticsLibrary, LibraryReaction
 from rmgpy.kinetics import KineticsData, Arrhenius
 import rmgpy.data.rmg
 from .react import reactAll
-from rmgpy.data.kinetics.common import ensure_independent_atom_ids
+from rmgpy.data.kinetics.common import ensure_independent_atom_ids, find_degenerate_reactions
 
 from pdep import PDepReaction, PDepNetwork
 

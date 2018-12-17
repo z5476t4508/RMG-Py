@@ -100,15 +100,18 @@ def react(*spcTuples):
     return itertools.chain.from_iterable(reactions)
 
 
-def reactSpecies(speciesTuple):
+def reactSpecies(speciesTupleTmp):
     """
     Given a tuple of Species objects, generates all possible reactions
     from the loaded reaction families and combines degenerate reactions.
     """
 
+    speciesTuple = speciesTupleTmp[0:-1]
+    own_families = speciesTupleTmp[-1]
+
     speciesTuple = tuple([spc.copy(deep=True) for spc in speciesTuple])
 
-    reactions = getDB('kinetics').generate_reactions_from_families(speciesTuple)
+    reactions = getDB('kinetics').generate_reactions_from_families(speciesTuple, only_families=own_families)
 
     return reactions
 
@@ -140,6 +143,37 @@ def reactAll(coreSpcList, numOldCoreSpecies, unimolecularReact, bimolecularReact
                         if coreSpcList[i].reactive and coreSpcList[j].reactive and coreSpcList[k].reactive:
                             spcTuples.append((coreSpcList[i], coreSpcList[j], coreSpcList[k]))
 
-    rxns = list(react(*spcTuples))
+    # Load kineticsFamilies to be added to reactant tuple to allow for improved load balancing 
+    # in parallel jobs
+    splitListTmp = []
+    for key, value in getDB('kinetics').families.iteritems() :
+        splitListTmp.append(key)
+ 
+    # Identify and split families that are prone to generate many reactions into sublists
+    splitList = []
+    for (i, v) in enumerate (splitListTmp):
+        if splitListTmp[i] == 'H_Abstraction':
+            splitListTmp[i] = []
+            splitList.append(['H_Abstraction'])
+        elif splitListTmp[i] == 'R_Recombination':
+            splitListTmp[i] = []
+            splitList.append(['R_Recombination'])
+
+    splitList.append(splitListTmp)
+
+    #print ("splitList {0}").format(splitList)
+    #print ("Length spcTuples {0}").format(len(spcTuples))
+    spcTuplestmp = []
+    # Append reaction families to reactant tuple
+    for tmpj in spcTuples:
+        for tmpl in splitList: 
+            tmpk = list(tmpj)
+            tmpk.append(tmpl)
+            spcTuplestmp.append(tuple(tmpk))
+   
+    #print ("Length spcTuplestmp {0}").format(len(spcTuplestmp))
+
+    rxns = list(react(*spcTuplestmp))
 
     return rxns
+
