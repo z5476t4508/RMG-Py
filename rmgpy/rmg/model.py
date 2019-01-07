@@ -78,15 +78,18 @@ def CalculateThermoParallel(spc):
     spc.generate_resonance_structures()
     original_molecule = spc.molecule[0]
 
-    if quantumMechanics.settings.onlyCyclics and not original_molecule.isCyclic():
-        print 'pass'
-    else: 
-        print 'try a QM calculation'
-        if original_molecule.getRadicalCount() > quantumMechanics.settings.maxRadicalNumber:
-            print 'Too many radicals for direct calculation: use HBI.'
+    if not quantumMechanics:
+        pass
+    else:
+        if quantumMechanics.settings.onlyCyclics and not original_molecule.isCyclic():
+            print 'pass'
         else: 
-            print 'Not too many radicals: do a direct calculation.'
-            thermo0 = quantumMechanics.getThermoData(original_molecule) # returns None if it fails
+            print 'try a QM calculation'
+            if original_molecule.getRadicalCount() > quantumMechanics.settings.maxRadicalNumber:
+                print 'Too many radicals for direct calculation: use HBI.'
+            else: 
+                print 'Not too many radicals: do a direct calculation.'
+                thermo0 = quantumMechanics.getThermoData(original_molecule) # returns None if it fails
 
 class ReactionModel:
     """
@@ -391,8 +394,8 @@ class CoreEdgeReactionModel:
         spec.molecularWeight = Quantity(spec.molecule[0].getMolecularWeight()*1000.,"amu")
 
         # All species should have thermo as we computed that directly after reactAll
-#        if not spec.thermo:
-#            submit(spec,self.solventName)
+        if not spec.thermo:
+            submit(spec,self.solventName)
 
         if spec.label == '':
             if spec.thermo and spec.thermo.label != '': #check if thermo libraries have a name for it
