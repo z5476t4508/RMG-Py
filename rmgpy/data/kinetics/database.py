@@ -515,6 +515,7 @@ and immediately used in input files without any additional changes.
         to_delete = []
         for i, rxn in enumerate(reaction_list):
             family = self.families[rxn.family]
+            logging.info(family)
             if family.ownReverse:
                 successful = family.addReverseAttribute(rxn)
                 if not successful:
