@@ -82,7 +82,7 @@ def CalculateThermoParallel(spc):
         pass
     else:
         if quantumMechanics.settings.onlyCyclics and not original_molecule.isCyclic():
-            print 'pass'
+#            print 'pass'
         else: 
             print 'try a QM calculation'
             if original_molecule.getRadicalCount() > quantumMechanics.settings.maxRadicalNumber:
@@ -726,8 +726,8 @@ class CoreEdgeReactionModel:
                 memoryavailable = psutil.virtual_memory().free / (1000.0 ** 3)
                 memoryuse = psutil.Process(os.getpid()).memory_info()[0]/(1000.0 ** 3)
                 tmp = divmod(memoryavailable, memoryuse)
-                logging.info("Memory use is {0} GB, available memory is {2} GB and max allowed "
-                             "number of processes is {1}.".format(memoryuse, tmp[0], memoryavailable))
+#                logging.info("Memory use is {0} GB, available memory is {2} GB and max allowed "
+#                             "number of processes is {1}.".format(memoryuse, tmp[0], memoryavailable))
                 tmp2 = min(maxproc, tmp[0])
                 procnum = max(1, int(tmp2))
             elif platform == "darwin":
@@ -735,8 +735,8 @@ class CoreEdgeReactionModel:
                 memoryavailable = psutil.virtual_memory().available/(1000.0 ** 3)
                 memoryuse = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1000.0 ** 3)
                 tmp = divmod(memoryavailable, memoryuse)
-                logging.info("Memory use is {0} GB, available memory is {2} GB and max allowed "
-                             "number of processes is {1}.".format(memoryuse, tmp[0], memoryavailable))
+#                logging.info("Memory use is {0} GB, available memory is {2} GB and max allowed "
+#                             "number of processes is {1}.".format(memoryuse, tmp[0], memoryavailable))
                 tmp2 = min(maxproc, tmp[0])
                 procnum = max(1, int(tmp2))
             else:

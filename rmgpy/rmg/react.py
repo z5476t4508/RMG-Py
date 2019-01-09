@@ -158,6 +158,33 @@ def reactAll(coreSpcList, numOldCoreSpecies, unimolecularReact, bimolecularReact
         elif splitListTmp[i] == 'R_Recombination':
             splitListTmp[i] = []
             splitList.append(['R_Recombination'])
+        elif splitListTmp[i] == 'Intra_Disproportionation':
+            splitListTmp[i] = []
+            splitList.append(['Intra_Disproportionation'])
+        elif splitListTmp[i] == 'Intra_RH_Add_Endocyclic':
+            splitListTmp[i] = []
+            splitList.append(['Intra_RH_Add_Endocyclic'])
+        elif splitListTmp[i] == 'Singlet_Carbene_Intra_Disproportionation':
+            splitListTmp[i] = []
+            splitList.append(['Singlet_Carbene_Intra_Disproportionation'])
+        elif splitListTmp[i] == 'Intra_ene_reaction':
+            splitListTmp[i] = []
+            splitList.append(['Intra_ene_reaction'])
+        elif splitListTmp[i] == 'Disproportionation':
+            splitListTmp[i] = []
+            splitList.append(['Disproportionation'])
+        elif splitListTmp[i] == '1,4_Linear_birad_scission':
+            splitListTmp[i] = []
+            splitList.append(['1,4_Linear_birad_scission'])
+        elif splitListTmp[i] == 'R_Addition_MultipleBond':
+            splitListTmp[i] = []
+            splitList.append(['R_Addition_MultipleBond'])
+        elif splitListTmp[i] == '2+2_cycloaddition_Cd':
+            splitListTmp[i] = []
+            splitList.append(['2+2_cycloaddition_Cd'])
+        elif splitListTmp[i] == 'Diels_alder_addition':
+            splitListTmp[i] = []
+            splitList.append(['Diels_alder_addition'])
 
     splitList.append(splitListTmp)
 
