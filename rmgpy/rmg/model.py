@@ -82,7 +82,8 @@ def CalculateThermoParallel(spc):
         pass
     else:
         if quantumMechanics.settings.onlyCyclics and not original_molecule.isCyclic():
-#            print 'pass'
+            pass
+            #print 'pass'
         else: 
             print 'try a QM calculation'
             if original_molecule.getRadicalCount() > quantumMechanics.settings.maxRadicalNumber:
