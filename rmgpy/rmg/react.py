@@ -145,8 +145,10 @@ def reactAll(coreSpcList, numOldCoreSpecies, unimolecularReact, bimolecularReact
 
     # Load kineticsFamilies to be added to reactant tuple to allow for improved load balancing 
     # in parallel jobs
+    splitListOrig = []
     splitListTmp = []
     for key, value in getDB('kinetics').families.iteritems() :
+        splitListOrig.append(key)
         splitListTmp.append(key)
  
     # Identify and split families that are prone to generate many reactions into sublists
@@ -188,17 +190,49 @@ def reactAll(coreSpcList, numOldCoreSpecies, unimolecularReact, bimolecularReact
 
     splitList.append(splitListTmp)
 
+    # Only employ family splitting for reactants that have a larger number of atoms than nAFS
+    nAFS = 10
     #print ("splitList {0}").format(splitList)
     #print ("Length spcTuples {0}").format(len(spcTuples))
     spcTuplestmp = []
     # Append reaction families to reactant tuple
     for tmpj in spcTuples:
-        for tmpl in splitList: 
-            tmpk = list(tmpj)
-            tmpk.append(tmpl)
-            spcTuplestmp.append(tuple(tmpk))
-   
-    #print ("Length spcTuplestmp {0}").format(len(spcTuplestmp))
+        if len(tmpj) == 1:
+            if len(str(tmpj[0])) > nAFS:
+                for tmpl in splitList: 
+                    tmpk = list(tmpj)
+                    tmpk.append(tmpl)
+                    spcTuplestmp.append(tuple(tmpk))
+            else:
+                tmpk = list(tmpj)
+                tmpk.append(splitListOrig)
+                spcTuplestmp.append(tuple(tmpk))
+        elif len(tmpj) == 2:
+            if (len(str(tmpj[0])) > nAFS
+               ) or (len(str(tmpj[1])) > nAFS):
+                for tmpl in splitList:
+                    tmpk = list(tmpj)
+                    tmpk.append(tmpl)
+                    spcTuplestmp.append(tuple(tmpk))
+            else:
+                tmpk = list(tmpj)
+                tmpk.append(splitListOrig)
+                spcTuplestmp.append(tuple(tmpk))
+        elif len(tmpk) == 3:
+            if (len(str(tmpk[0])) > nAFS
+               ) or (len(str(tmpk[1])) > nAFS
+                    ) or (len(str(tmpk[2])) > nAFS):
+                for tmpl in splitList:
+                    tmpk = list(tmpj)
+                    tmpk.append(tmpl)
+                    spcTuplestmp.append(tuple(tmpk))
+            else:
+                tmpk = list(tmpj)
+                tmpk.append(splitListOrig)
+                spcTuplestmp.append(tuple(tmpk))
+
+#    print spcTuplestmp
+#    print ("Length spcTuplestmp {0}").format(len(spcTuplestmp))
 
     rxns = list(react(*spcTuplestmp))
 
