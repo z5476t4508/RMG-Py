@@ -85,11 +85,12 @@ def CalculateThermoParallel(spc):
             pass
             #print 'pass'
         else: 
-            print 'try a QM calculation'
+            #print 'try a QM calculation'
             if original_molecule.getRadicalCount() > quantumMechanics.settings.maxRadicalNumber:
-                print 'Too many radicals for direct calculation: use HBI.'
+                pass
+                #print 'Too many radicals for direct calculation: use HBI.'
             else: 
-                print 'Not too many radicals: do a direct calculation.'
+                print 'Not too many radicals: do a direct QM calculation.'
                 thermo0 = quantumMechanics.getThermoData(original_molecule) # returns None if it fails
 
 class ReactionModel:
@@ -394,7 +395,6 @@ class CoreEdgeReactionModel:
             spec.generate_resonance_structures()
         spec.molecularWeight = Quantity(spec.molecule[0].getMolecularWeight()*1000.,"amu")
 
-        # All species should have thermo as we computed that directly after reactAll
         if not spec.thermo:
             submit(spec,self.solventName)
 
@@ -713,14 +713,36 @@ class CoreEdgeReactionModel:
             rxns = find_degenerate_reactions(rxns, kinetics_database=getDB('kinetics'))
 
             # Get new species and save in spcs
-            spcs = []
+            spcs_tmp = []
             for rxn in rxns:
-                spcs.extend(rxn.reactants)
-                spcs.extend(rxn.products)
+                spcs_tmp.extend(rxn.reactants)
+                spcs_tmp.extend(rxn.products)
 
-            if not spcs:
+            if not spcs_tmp:
+                spcs = spcs_tmp
                 pass
             else:
+                # Generate unique list of species to be submitted to QM thermo calculation
+                from rmgpy.molecule.molecule import Molecule
+                # intilize list 
+                spcs=[spcs_tmp[0]]
+                for counter, spc in enumerate (spcs_tmp):
+                    #print("counter {0} spc{1}".format(counter,spc))
+                    for counter2, val in enumerate (spcs):
+                        #print("counter2 {0} val{1}".format(counter2,val))
+                        if (spc.molecule[0].toSMILES() != val.molecule[0].toSMILES()):
+                            #print("Potentially append reactant to list.")
+                            appendReactant = True
+                        else:
+                            #print("Reactant already in list.")
+                            appendReactant = False
+                            break
+                    if appendReactant:
+                        #print("Append reactant to list.")
+                        spcs.append(spc)
+                #print spcs_tmp
+                #print(spcs)
+
                 # Calculate quantum thermo in parallel
                 from rmgpy.rmg.main import maxproc
                 
