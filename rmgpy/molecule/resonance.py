@@ -1003,11 +1003,7 @@ def _clar_optimization(mol, constraints=None, max_num=None):
     cython.declare(molecule=Molecule, aromaticRings=list, exo=list, l=cython.int, m=cython.int, n=cython.int,
                    a=list, objective=list, status=cython.int, solution=list, innerSolutions=list)
 
-    from lpsolve55 import lpsolve
-    import signal
-
-    # Save the current signal handler
-    sig = signal.getsignal(signal.SIGINT)
+    from rmgpy.molecule.clar_lp import solve_clar_lp
 
     # Make a copy of the molecule so we don't destroy the original
     molecule = mol.copy(deep=True)
@@ -1057,49 +1053,10 @@ def _clar_optimization(mol, constraints=None, max_num=None):
     # Objective vector for optimization: sextets have a weight of 1, double bonds have a weight of 0
     objective = [1] * l + [0] * len(bonds)
 
-    # Solve LP problem using lpsolve
-    lp = lpsolve('make_lp', m, n)               # initialize lp with constraint matrix with m rows and n columns
-    lpsolve('set_verbose', lp, 2)               # reduce messages from lpsolve
-    lpsolve('set_obj_fn', lp, objective)        # set objective function
-    lpsolve('set_maxim', lp)                    # set solver to maximize objective
-    lpsolve('set_mat', lp, a)                   # set left hand side to constraint matrix
-    lpsolve('set_rh_vec', lp, [1] * m)          # set right hand side to 1 for all constraints
-    lpsolve('set_constr_type', lp, ['='] * m)   # set all constraints as equality constraints
-    lpsolve('set_binary', lp, [True] * n)       # set all variables to be binary
-
-    # Constrain values of exocyclic bonds, since we don't want to modify them
-    for i in range(l, n):
-        if exo[i - l] is not None:
-            # NOTE: lpsolve indexes from 1, so the variable we're changing should be i + 1
-            lpsolve('set_bounds', lp, i + 1, exo[i - l], exo[i - l])
-
-    # Add constraints to problem if provided
-    if constraints is not None:
-        for constraint in constraints:
-            try:
-                lpsolve('add_constraint', lp, constraint[0], '<=', constraint[1])
-            except Exception as e:
-                logging.debug('Unable to add constraint: {0} <= {1}'.format(constraint[0], constraint[1]))
-                logging.debug(mol.toAdjacencyList())
-                if str(e) == 'invalid vector.':
-                    raise ILPSolutionError('Unable to add constraint, likely due to '
-                                           'inconsistent aromatic ring perception.')
-                else:
-                    raise e
-
-    status = lpsolve('solve', lp)
-    obj_val, solution = lpsolve('get_solution', lp)[0:2]
-    lpsolve('delete_lp', lp)  # Delete the LP problem to clear up memory
-
-    # Reset signal handling since lpsolve changed it
-    try:
-        signal.signal(signal.SIGINT, sig)
-    except ValueError:
-        # This is not being run in the main thread, so we cannot reset signal
-        pass
+    status, obj_val, solution = solve_clar_lp(objective, a, l, m, n, exo, constraints, mol)
 
     # Check that optimization was successful
-    if status != 0:
+    if not status:
         raise ILPSolutionError('Optimization could not find a valid solution.')
 
     # Check that we the result contains at least one aromatic sextet
