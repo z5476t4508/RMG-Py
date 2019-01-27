@@ -187,6 +187,27 @@ def reactAll(coreSpcList, numOldCoreSpecies, unimolecularReact, bimolecularReact
         elif splitListTmp[i] == 'Diels_alder_addition':
             splitListTmp[i] = []
             splitList.append(['Diels_alder_addition'])
+        elif splitListTmp[i] == 'Intra_RH_Add_Exocyclic':
+            splitListTmp[i] = []
+            splitList.append(['Intra_RH_Add_Exocyclic'])
+        elif splitListTmp[i] == 'Intra_Retro_Diels_alder_bicyclic':
+            splitListTmp[i] = []
+            splitList.append(['Intra_Retro_Diels_alder_bicyclic'])
+        elif splitListTmp[i] == 'Intra_2+2_cycloaddition_Cd':
+            splitListTmp[i] = []
+            splitList.append(['Intra_2+2_cycloaddition_Cd'])
+        elif splitListTmp[i] == 'Birad_recombination':
+            splitListTmp[i] = []
+            splitList.append(['Birad_recombination'])
+        elif splitListTmp[i] == 'Intra_Diels_alder_monocyclic':
+            splitListTmp[i] = []
+            splitList.append(['Intra_Diels_alder_monocyclic'])
+        elif splitListTmp[i] == '1,4_Cyclic_birad_scission':
+            splitListTmp[i] = []
+            splitList.append(['1,4_Cyclic_birad_scission'])
+        elif splitListTmp[i] == '1,2_Insertion_carbene':
+            splitListTmp[i] = []
+            splitList.append(['1,2_Insertion_carbene'])
 
     splitList.append(splitListTmp)
 
