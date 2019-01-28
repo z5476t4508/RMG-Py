@@ -67,13 +67,13 @@ from pdep import PDepReaction, PDepNetwork
 
 ################################################################################
 def CalculateThermoParallel(spc):
-#    from rmgpy.rmg.input import getInput
-#
-#    try:
-#        quantumMechanics = getInput('quantumMechanics')
-#    except Exception:
-#        logging.debug('Quantum Mechanics DB could not be found.')
-#        quantumMechanics = None
+    from rmgpy.rmg.input import getInput
+
+    try:
+        quantumMechanics = getInput('quantumMechanics')
+    except Exception:
+        logging.debug('Quantum Mechanics DB could not be found.')
+        quantumMechanics = None
 
     spc.generate_resonance_structures()
     original_molecule = spc.molecule[0]
