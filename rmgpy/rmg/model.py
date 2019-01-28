@@ -67,31 +67,31 @@ from pdep import PDepReaction, PDepNetwork
 
 ################################################################################
 def CalculateThermoParallel(spc):
-    from rmgpy.rmg.input import getInput
-
-    try:
-        quantumMechanics = getInput('quantumMechanics')
-    except Exception:
-        logging.debug('Quantum Mechanics DB could not be found.')
-        quantumMechanics = None
+#    from rmgpy.rmg.input import getInput
+#
+#    try:
+#        quantumMechanics = getInput('quantumMechanics')
+#    except Exception:
+#        logging.debug('Quantum Mechanics DB could not be found.')
+#        quantumMechanics = None
 
     spc.generate_resonance_structures()
     original_molecule = spc.molecule[0]
 
-    if not quantumMechanics:
+#    if not quantumMechanics:
+#        pass
+#    else:
+    if quantumMechanics.settings.onlyCyclics and not original_molecule.isCyclic():
         pass
-    else:
-        if quantumMechanics.settings.onlyCyclics and not original_molecule.isCyclic():
+        #print 'pass'
+    else: 
+        #print 'try a QM calculation'
+        if original_molecule.getRadicalCount() > quantumMechanics.settings.maxRadicalNumber:
             pass
-            #print 'pass'
+            #print 'Too many radicals for direct calculation: use HBI.'
         else: 
-            #print 'try a QM calculation'
-            if original_molecule.getRadicalCount() > quantumMechanics.settings.maxRadicalNumber:
-                pass
-                #print 'Too many radicals for direct calculation: use HBI.'
-            else: 
-                print 'Not too many radicals: do a direct QM calculation.'
-                thermo0 = quantumMechanics.getThermoData(original_molecule) # returns None if it fails
+            print 'Not too many radicals: do a direct QM calculation.'
+            thermo0 = quantumMechanics.getThermoData(original_molecule) # returns None if it fails
 
 class ReactionModel:
     """
@@ -708,79 +708,91 @@ class CoreEdgeReactionModel:
             rxns = reactAll(self.core.species, numOldCoreSpecies,
                             unimolecularReact, bimolecularReact, trimolecularReact=trimolecularReact)
 
-            # Calculate reaction degeneracy
-            from rmgpy.data.rmg import getDB
-            rxns = find_degenerate_reactions(rxns, kinetics_database=getDB('kinetics'))
+#            # Calculate reaction degeneracy
+#            from rmgpy.data.rmg import getDB
+#            rxns = find_degenerate_reactions(rxns, kinetics_database=getDB('kinetics'))
 
             # Get new species and save in spcs
             spcs_tmp = []
             for rxn in rxns:
                 spcs_tmp.extend(rxn.reactants)
                 spcs_tmp.extend(rxn.products)
+                
+            spcs = spcs_tmp
 
-            if not spcs_tmp:
-                spcs = spcs_tmp
+            from rmgpy.rmg.input import getInput
+            try:
+                quantumMechanics = getInput('quantumMechanics')
+            except Exception:
+                logging.debug('Quantum Mechanics DB could not be found.')
+                quantumMechanics = None
+        
+            if not quantumMechanics:
                 pass
             else:
-                # Generate unique list of species to be submitted to QM thermo calculation
-                from rmgpy.molecule.molecule import Molecule
-                # intilize list 
-                spcs=[spcs_tmp[0]]
-                for counter, spc in enumerate (spcs_tmp):
-                    #print("counter {0} spc{1}".format(counter,spc))
-                    for counter2, val in enumerate (spcs):
-                        #print("counter2 {0} val{1}".format(counter2,val))
-                        if (spc.molecule[0].toSMILES() != val.molecule[0].toSMILES()):
-                            #print("Potentially append reactant to list.")
-                            appendReactant = True
-                        else:
-                            #print("Reactant already in list.")
-                            appendReactant = False
-                            break
-                    if appendReactant:
-                        #print("Append reactant to list.")
-                        spcs.append(spc)
-                #print spcs_tmp
-                #print(spcs)
-
-                # Calculate quantum thermo in parallel
-                from rmgpy.rmg.main import maxproc
-                
-                # Get available RAM (GB)and procnum dependent on OS
-                if platform.startswith('linux'):
-                    # linux
-                    memoryavailable = psutil.virtual_memory().free / (1000.0 ** 3)
-                    memoryuse = psutil.Process(os.getpid()).memory_info()[0]/(1000.0 ** 3)
-                    tmp = divmod(memoryavailable, memoryuse)
-    #                logging.info("Memory use is {0} GB, available memory is {2} GB and max allowed "
-    #                             "number of processes is {1}.".format(memoryuse, tmp[0], memoryavailable))
-                    tmp2 = min(maxproc, tmp[0])
-                    procnum = max(1, int(tmp2))
-                elif platform == "darwin":
-                    # OS X
-                    memoryavailable = psutil.virtual_memory().available/(1000.0 ** 3)
-                    memoryuse = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1000.0 ** 3)
-                    tmp = divmod(memoryavailable, memoryuse)
-    #                logging.info("Memory use is {0} GB, available memory is {2} GB and max allowed "
-    #                             "number of processes is {1}.".format(memoryuse, tmp[0], memoryavailable))
-                    tmp2 = min(maxproc, tmp[0])
-                    procnum = max(1, int(tmp2))
+                if not spcs_tmp:
+                    spcs = spcs_tmp
+                    #pass
                 else:
-                    # Everything else
-                    procnum = 1
-            
-                # Execute multiprocessing map. It blocks until the result is ready.
-                # This method chops the iterable into a number of chunks which it
-                # submits to the process pool as separate tasks.
-                p = Pool(processes=procnum)
-                p.map(CalculateThermoParallel,spcs)
-    #            for spc in spcs:
-    #                spc.generate_resonance_structures()
-    #                original_molecule = spc.molecule[0]
-    #                # Returns unsorted list, depending on which one is returned fastest
-    #                p.apply_async(submit_own, (original_molecule,))
-                p.close()
-                p.join()
+                    # Generate unique list of species to be submitted to QM thermo calculation
+                    from rmgpy.molecule.molecule import Molecule
+                    # intilize list 
+                    spcs=[spcs_tmp[0]]
+                    for counter, spc in enumerate (spcs_tmp):
+                        #print("counter {0} spc{1}".format(counter,spc))
+                        for counter2, val in enumerate (spcs):
+                            #print("counter2 {0} val{1}".format(counter2,val))
+                            if (spc.molecule[0].toSMILES() != val.molecule[0].toSMILES()):
+                                #print("Potentially append reactant to list.")
+                                appendReactant = True
+                            else:
+                                #print("Reactant already in list.")
+                                appendReactant = False
+                                break
+                        if appendReactant:
+                            #print("Append reactant to list.")
+                            spcs.append(spc)
+                    #print spcs_tmp
+                    #print(spcs)
+    
+                    # Calculate quantum thermo in parallel
+                    from rmgpy.rmg.main import maxproc
+                    
+                    # Get available RAM (GB)and procnum dependent on OS
+                    if platform.startswith('linux'):
+                        # linux
+                        memoryavailable = psutil.virtual_memory().free / (1000.0 ** 3)
+                        memoryuse = psutil.Process(os.getpid()).memory_info()[0]/(1000.0 ** 3)
+                        tmp = divmod(memoryavailable, memoryuse)
+        #                logging.info("Memory use is {0} GB, available memory is {2} GB and max allowed "
+        #                             "number of processes is {1}.".format(memoryuse, tmp[0], memoryavailable))
+                        tmp2 = min(maxproc, tmp[0])
+                        procnum = max(1, int(tmp2))
+                    elif platform == "darwin":
+                        # OS X
+                        memoryavailable = psutil.virtual_memory().available/(1000.0 ** 3)
+                        memoryuse = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/(1000.0 ** 3)
+                        tmp = divmod(memoryavailable, memoryuse)
+        #                logging.info("Memory use is {0} GB, available memory is {2} GB and max allowed "
+        #                             "number of processes is {1}.".format(memoryuse, tmp[0], memoryavailable))
+                        tmp2 = min(maxproc, tmp[0])
+                        procnum = max(1, int(tmp2))
+                    else:
+                        # Everything else
+                        procnum = 1
+                
+                    # Execute multiprocessing map. It blocks until the result is ready.
+                    # This method chops the iterable into a number of chunks which it
+                    # submits to the process pool as separate tasks.
+                    p = Pool(processes=procnum)
+                    p.map(CalculateThermoParallel,spcs)
+        #            for spc in spcs:
+        #                spc.generate_resonance_structures()
+        #                original_molecule = spc.molecule[0]
+        #                # Returns unsorted list, depending on which one is returned fastest
+        #                p.apply_async(submit_own, (original_molecule,))
+                    p.close()
+                    p.join()
 
             ensure_independent_atom_ids(spcs, resonance=True)
 
