@@ -2454,7 +2454,7 @@ class KineticsFamily(Database):
             for species in reaction.reactants + reaction.products:
                 species.generate_resonance_structures()
 
-    def getw0(self,rxn):
+    def getw0(self, rxn):
         """
         calculates the w0 for Blower Masel kinetics by calculating wf (total bond energy of bonds formed)
         and wb (total bond energy of bonds broken) with w0 = (wf+wb)/2
@@ -2508,7 +2508,7 @@ class KineticsFamily(Database):
 
         return (wf+wb)/2.0
 
-    def getw0s(self,rxns):
+    def getw0s(self, rxns):
         return map(self.getw0,rxns)
 
     def getTrainingDepository(self):
@@ -2522,7 +2522,7 @@ class KineticsFamily(Database):
             raise DatabaseError('Could not find training depository in family {0}.'.format(self.label))
 
 
-    def addEntry(self,parent,grp,name):
+    def addEntry(self, parent, grp, name):
         """
         Adds a group entry with parent parent
         group structure grp
@@ -2535,7 +2535,7 @@ class KineticsFamily(Database):
         if entry.parent:
             entry.parent.children.append(entry)
 
-    def splitReactions(self,rxns,newgrp):
+    def splitReactions(self, rxns, newgrp):
         """
         divides the reactions in rxns between the new
         group structure newgrp and the old structure with
@@ -2564,7 +2564,7 @@ class KineticsFamily(Database):
 
         return new,comp,newInds
 
-    def evalExt(self,parent,ext,extname,templateRxnMap,obj=None,T=1000.0):
+    def evalExt(self, parent, ext, extname, templateRxnMap, obj=None, T=1000.0):
         """
         evaluates the objective function obj
         for the extension ext with name extname to the parent entry parent
@@ -2582,7 +2582,7 @@ class KineticsFamily(Database):
                 ob,boo = getObjectiveFunction(new,old,T=T)
             return ob,True
 
-    def getExtensionEdge(self,parent,templateRxnMap,obj,T):
+    def getExtensionEdge(self, parent, templateRxnMap, obj, T):
         """
         finds the set of all extension groups to parent such that
         1) the extension group divides the set of reactions under parent
@@ -2734,7 +2734,7 @@ class KineticsFamily(Database):
         return out
 
 
-    def extendNode(self,parent,templateRxnMap,thermoDatabase=None,obj=None,T=1000.0,):
+    def extendNode(self, parent, templateRxnMap, thermoDatabase=None, obj=None, T=1000.0,):
         """
         Constructs an extension to the group parent based on evaluation
         of the objective function obj
@@ -2837,7 +2837,7 @@ class KineticsFamily(Database):
 
         return True
 
-    def generateTree(self,obj=None,thermoDatabase=None,T=1000.0):
+    def generateTree(self, obj=None, thermoDatabase=None, T=1000.0):
         """
         Generate a tree by greedy optimization based on the objective function obj
         the optimization is done by iterating through every group and if the group has
@@ -2877,7 +2877,7 @@ class KineticsFamily(Database):
         return
 
 
-    def makeBMRulesFromTemplateRxnMap(self,templateRxnMap):
+    def makeBMRulesFromTemplateRxnMap(self, templateRxnMap):
 
         index = max([e.index for e in self.rules.getEntries()] or [0]) + 1
 
@@ -2910,7 +2910,7 @@ class KineticsFamily(Database):
 
 
 
-    def crossValidate(self,folds=5,templateRxnMap=None,T=1000.0,iters=0,random_state=1):
+    def crossValidate(self, folds=5, templateRxnMap=None, T=1000.0, iters=0, random_state=1):
         """
         Perform K-fold cross validation on an automatically generated tree at temperature T
         after finding an appropriate node for kinetics estimation it will move up the tree
@@ -2967,7 +2967,7 @@ class KineticsFamily(Database):
 
         return errors
 
-    def crossValidateOld(self,folds=5,T=1000.0,random_state=1,estimator='rate rules',thermoDatabase=None):
+    def crossValidateOld(self, folds=5, T=1000.0, random_state=1, estimator='rate rules', thermoDatabase=None):
         """
         Perform K-fold cross validation on an automatically generated tree at temperature T
         Returns a dictionary mapping {rxn:Ln(k_Est/k_Train)}
@@ -3096,7 +3096,7 @@ class KineticsFamily(Database):
                                 if vals != [] and all([set(child.item.getBond(child.item.atoms[i],child.item.atoms[j]).order) <= set(vals) for child in node.children]):
                                     bd.order = vals
 
-    def regularize(self, regularization=simpleRegularization,keepRoot=True):
+    def regularize(self, regularization=simpleRegularization, keepRoot=True):
         """
         Regularizes the tree according to the regularization function regularization
         """
@@ -3120,7 +3120,7 @@ class KineticsFamily(Database):
                 raise ValueError('Child not subgraph isomorphic to parent')
             self.checkTree(child)
 
-    def makeTree(self,obj=None,regularization=simpleRegularization,thermoDatabase=None,T=1000.0):
+    def makeTree(self, obj=None, regularization=simpleRegularization, thermoDatabase=None, T=1000.0):
         """
         generates tree structure and then generates rules for the tree
         """
@@ -3134,7 +3134,7 @@ class KineticsFamily(Database):
         self.rules.entries = OrderedDict()
         self.rules.entries['Root'] = []
 
-    def cleanTreeGroups(self,thermoDatabase=None):
+    def cleanTreeGroups(self, thermoDatabase=None):
         """
         clears groups and rules in the tree, generates an appropriate
         root group to start from and then reads training reactions
@@ -3166,11 +3166,11 @@ class KineticsFamily(Database):
 
         return
 
-    def cleanTree(self,thermoDatabase=None):
+    def cleanTree(self, thermoDatabase=None):
         self.cleanTreeRules()
         self.cleanTreeGroups(thermoDatabase=thermoDatabase)
 
-    def saveGeneratedTree(self,path=None):
+    def saveGeneratedTree(self, path=None):
         """
         clears the rules and saves the family to its
         current location in database
@@ -3320,7 +3320,7 @@ class KineticsFamily(Database):
         else:
             return rxns
 
-    def getReactionMatches(self,rxns=None,thermoDatabase=None,removeDegeneracy=False,estimateThermo=True,fixLabels=False,exactMatchesOnly=False,getReverse=False):
+    def getReactionMatches(self, rxns=None, thermoDatabase=None, removeDegeneracy=False, estimateThermo=True, fixLabels=False, exactMatchesOnly=False, getReverse=False):
         """
         returns a dictionary mapping for each entry in the tree:
         (entry.label,entry.item) : list of all training reactions (or the list given) that match that entry
@@ -3378,7 +3378,7 @@ class KineticsFamily(Database):
         return rxnLists
 
 
-    def isEntryMatch(self,mol,entry):
+    def isEntryMatch(self, mol, entry):
         """
         determines if the labeled molecule object of reactants matches the entry entry
         """
