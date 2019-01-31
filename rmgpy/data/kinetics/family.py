@@ -3129,7 +3129,6 @@ class KineticsFamily(Database):
         templateRxnMap = self.getReactionMatches(thermoDatabase=thermoDatabase,removeDegeneracy=True,getReverse=True)
         self.makeBMRulesFromTemplateRxnMap(templateRxnMap)
         self.checkTree()
-        return
 
     def cleanTreeRules(self):
         self.rules.entries = OrderedDict()
