@@ -1797,7 +1797,7 @@ class KineticsFamily(Database):
         else:
             template = self.reverseTemplate
 
-        if len(reactants) > len(template.reactants):
+        if len(reactants) > len(template.reactants): #if the family has one template and is unimolecular split template into multiple reactants
             try:
                 grps = template.reactants[0].item.split()
                 template_reactants = []
