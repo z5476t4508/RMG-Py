@@ -69,6 +69,7 @@ requirements:
     - symmetry
     - xlwt
     - dde
+    - scikit-learn
 
 test:
   source_files:
