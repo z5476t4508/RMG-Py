@@ -259,3 +259,40 @@ def reactAll(coreSpcList, numOldCoreSpecies, unimolecularReact, bimolecularReact
 
     return rxns
 
+def reactPdep(*spcTuples):
+    """
+    Generate reactions between the species in the
+    list of species tuples for all the reaction families available.
+
+    For each tuple of one or more Species objects [(spc1,), (spc2, spc3), ...]
+    the following is done:
+
+    A list of tuples is created for each resonance isomer of the species.
+    Each tuple consists of (Molecule, index) with the index the species index of the Species object.
+
+    Possible combinations between the first spc in the tuple, and the second species in the tuple
+    is obtained by taking the combinatorial product of the two generated [(Molecule, index)] lists.
+
+    Returns a flat generator object containing the generated Reaction objects.
+    """
+
+    reactions = map(
+                reactSpeciesPdep,
+                spcTuples)
+
+    return itertools.chain.from_iterable(reactions)
+
+
+def reactSpeciesPdep(speciesTuple):
+    """
+    Given a tuple of Species objects, generates all possible reactions
+    from the loaded reaction families and combines degenerate reactions.
+    """
+
+    speciesTuple = tuple([spc.copy(deep=True) for spc in speciesTuple])
+
+    reactions = getDB('kinetics').generate_reactions_from_families(speciesTuple)
+
+    return reactions
+
+
