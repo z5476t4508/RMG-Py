@@ -200,15 +200,15 @@ class StatMechJob(object):
         species object.
         """
         path = self.path
-        TS = isinstance(self.species, TransitionState)
+        is_ts = isinstance(self.species, TransitionState)
         _, file_extension = os.path.splitext(path)
         if file_extension in ['.yml', '.yaml']:
-            if TS:
                 raise NotImplementedError('Loading transition states from a YAML file is still unsupported.')
             self.arkane_species.load_yaml(path=path, species=self.species, pdep=pdep)
             self.species.conformer = self.arkane_species.conformer
             self.species.transportData = self.arkane_species.transport_data
             self.species.energyTransferModel = self.arkane_species.energy_transfer_model
+            if is_ts:
             return
 
         logging.info('Loading statistical mechanics parameters for {0}...'.format(self.species.label))
@@ -425,7 +425,7 @@ class StatMechJob(object):
         conformer.E0 = (E0_withZPE*0.001,"kJ/mol")
 
         # If loading a transition state, also read the imaginary frequency
-        if TS:
+        if is_ts:
             neg_freq = statmechLog.loadNegativeFrequency()
             self.species.frequency = (neg_freq * self.frequencyScaleFactor, "cm^-1")
             self.supporting_info.append(neg_freq)
@@ -523,7 +523,7 @@ class StatMechJob(object):
                         rotorCount += 1
 
             logging.debug('    Determining frequencies from reduced force constant matrix...')
-            frequencies = numpy.array(projectRotors(conformer, F, rotors, linear, TS))
+            frequencies = numpy.array(projectRotors(conformer, F, rotors, linear, is_ts))
 
         elif len(conformer.modes) > 2:
             if len(rotors) > 0:
@@ -905,7 +905,7 @@ class Log(object):
         self.software_log = software_log
 
 
-def projectRotors(conformer, F, rotors, linear, TS):
+def projectRotors(conformer, F, rotors, linear, is_ts):
     """
     For a given `conformer` with associated force constant matrix `F`, lists of
     rotor information `rotors`, `pivots`, and `top1`, and the linearity of the
@@ -919,7 +919,7 @@ def projectRotors(conformer, F, rotors, linear, TS):
 
     Nrotors = len(rotors)
     Natoms = len(conformer.mass.value)
-    Nvib = 3 * Natoms - (5 if linear else 6) - Nrotors - (1 if (TS) else 0)
+    Nvib = 3 * Natoms - (5 if linear else 6) - Nrotors - (1 if (is_ts) else 0)
     mass = conformer.mass.value_si
     coordinates = conformer.coordinates.getValue()
 
