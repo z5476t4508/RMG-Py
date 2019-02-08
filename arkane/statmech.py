@@ -50,6 +50,7 @@ from rmgpy.statmech.torsion import Torsion, HinderedRotor, FreeRotor
 from rmgpy.statmech.conformer import Conformer
 from rmgpy.exceptions import InputError
 from rmgpy.quantity import Quantity
+from rmgpy.molecule.molecule import Molecule
 
 from arkane.output import prettify
 from arkane.gaussian import GaussianLog
@@ -176,10 +177,7 @@ class StatMechJob(object):
         self.atomEnergies = None
         self.supporting_info = [self.species.label]
         self.bonds = None
-
-        if isinstance(species, Species):
-            # Currently we do not dump and load transition states in YAML form
-            self.arkane_species = ArkaneSpecies(species=species)
+        self.arkane_species = ArkaneSpecies(species=species)
 
     def execute(self, outputFile=None, plot=False, pdep=False):
         """
@@ -203,12 +201,19 @@ class StatMechJob(object):
         is_ts = isinstance(self.species, TransitionState)
         _, file_extension = os.path.splitext(path)
         if file_extension in ['.yml', '.yaml']:
-                raise NotImplementedError('Loading transition states from a YAML file is still unsupported.')
             self.arkane_species.load_yaml(path=path, species=self.species, pdep=pdep)
             self.species.conformer = self.arkane_species.conformer
-            self.species.transportData = self.arkane_species.transport_data
-            self.species.energyTransferModel = self.arkane_species.energy_transfer_model
             if is_ts:
+                self.species.frequency = self.arkane_species.imaginary_frequency
+            else:
+                self.species.transportData = self.arkane_species.transport_data
+                self.species.energyTransferModel = self.arkane_species.energy_transfer_model
+                if self.arkane_species.adjacency_list is not None:
+                    self.species.molecule = [Molecule().fromAdjacencyList(adjlist=self.arkane_species.adjacency_list)]
+                elif self.arkane_species.inchi is not None:
+                    self.species.molecule = [Molecule().fromInChI(inchistr=self.arkane_species.inchi)]
+                elif self.arkane_species.smiles is not None:
+                    self.species.molecule = [Molecule().fromSMILES(smilesstr=self.arkane_species.smiles)]
             return
 
         logging.info('Loading statistical mechanics parameters for {0}...'.format(self.species.label))
@@ -558,7 +563,6 @@ class StatMechJob(object):
         f = open(outputFile, 'a')
 
         conformer = self.species.conformer
-
         coordinates = conformer.coordinates.value_si * 1e10
         number = conformer.number.value_si
 
