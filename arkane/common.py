@@ -247,7 +247,17 @@ class ArkaneSpecies(RMGObject):
                       'Wilhoit': Wilhoit,
                       'NASA': NASA,
                       }
+        freq_data = None
+        if 'imaginary_frequency' in data:
+            freq_data = data['imaginary_frequency']
+            del data['imaginary_frequency']
         self.make_object(data=data, class_dict=class_dict)
+        if freq_data is not None:
+            self.imaginary_frequency = ScalarQuantity()
+            self.imaginary_frequency.make_object(data=freq_data, class_dict=dict())
+        self.adjacency_list = data['adjacency_list'] if 'adjacency_list' in data else None
+        self.inchi = data['inchi'] if 'inchi' in data else None
+        self.smiles = data['smiles'] if 'smiles' in data else None
         if pdep and (self.transport_data is None or self.energy_transfer_model is None):
             raise ValueError('Transport data and an energy transfer model must be given if pressure-dependent '
                              'calculations are requested. Check file {0}'.format(path))
