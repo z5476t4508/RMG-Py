@@ -5,6 +5,12 @@ Created on Mon Feb 11 16:01:33 2019
 
 @author: mark
 """
+import os.path
+import logging
+import shutil
+
+from rmgpy.qm.qmdata import QMData
+from rmgpy.qm.symmetry import PointGroupCalculator
 
 class Log(object):
     """
@@ -77,3 +83,36 @@ class Log(object):
         """
         raise NotImplementedError("loadGeometry is not implemented for the Log class")
 
+    def get_optical_isomers_and_symmetry_number(self):
+        """
+        This method uses the symmetry package from RMG's QM module
+        and returns a tuple where the first element is the number
+        of optical isomers and the second element is the symmetry number.
+        """
+        coordinates, atom_numbers, mass = self.loadGeometry()
+        unique_id = '0'  # Just some name that the SYMMETRY code gives to one of its jobs
+        scr_dir = os.path.join(self.path, str('scratch'))  # Scratch directory that the SYMMETRY code writes its files in
+        if not os.path.exists(scr_dir):
+            os.makedirs(scr_dir)
+        try:
+            qmdata = QMData(
+                groundStateDegeneracy=1,  # Only needed to check if valid QMData
+                numberOfAtoms=len(atom_numbers),
+                atomicNumbers=atom_numbers,
+                atomCoords=(coordinates, str('angstrom')),
+                energy=(0.0, str('kcal/mol'))  # Only needed to avoid error
+            )
+            settings = type(str(''), (), dict(symmetryPath=str('symmetry'), scratchDirectory=scr_dir))()  # Creates anonymous class
+            pgc = PointGroupCalculator(settings, unique_id, qmdata)
+            pg = pgc.calculate()
+            if pg is not None:
+                optical_isomers = 2 if pg.chiral else 1
+                symmetry = pg.symmetryNumber
+                logging.debug("Symmetry algorithm found {0} optical isomers and a symmetry number of {1}".format(optical_isomers,symmetry))
+            else:
+                logging.warning("Symmetry algorithm errored when computing optical isomers. Setting to 1")
+                optical_isomers = 1
+                symmetry = 1
+            return optical_isomers, symmetry
+        finally:
+            shutil.rmtree(scr_dir)
