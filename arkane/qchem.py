@@ -167,7 +167,7 @@ class QChemLog(Log):
 
         return coord, number, mass
 
-    def loadConformer(self, symmetry=None, spinMultiplicity=0, opticalIsomers=None, symfromlog=None, label=''):
+    def loadConformer(self, symmetry=None, spinMultiplicity=0, opticalIsomers=None, label=''):
         """
         Load the molecular degree of freedom data from an output file created as the result of a
         QChem "Freq" calculation. As QChem's guess of the external symmetry number is not always correct,
@@ -229,8 +229,7 @@ class QChemLog(Log):
                         inertia = [float(d) for d in line.split()[-3:]]
 
                     # Read QChem's estimate of the external rotational symmetry number, which may very well be incorrect
-                    elif 'Rotational Symmetry Number is' in line and symfromlog:
-                        symmetry = int(float(line.split()[-1]))
+                    elif 'Rotational Symmetry Number is' in line and symmetry is None:
                         logging.debug('Rotational Symmetry read from QChem is {}'.format(str(symmetry)))
 
                     # Read the next line in the file

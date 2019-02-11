@@ -154,7 +154,7 @@ class GaussianLog(Log):
         
         return coord, number, mass
 
-    def loadConformer(self, symmetry=None, spinMultiplicity=0, opticalIsomers=None, symfromlog=None, label=''):
+    def loadConformer(self, symmetry=None, spinMultiplicity=0, opticalIsomers=None, label=''):
         """
         Load the molecular degree of freedom data from a log file created as
         the result of a Gaussian "Freq" quantum chemistry calculation. As
@@ -197,8 +197,7 @@ class GaussianLog(Log):
 
                     # Read Gaussian's estimate of the external symmetry number
                     elif 'Rotational symmetry number' in line and symmetry is None:
-                        if symfromlog is True:
-                            symmetry = int(float(line.split()[3]))
+                        symmetry = int(float(line.split()[3]))
 
                     # Read moments of inertia for external rotational modes
                     elif 'Rotational constants (GHZ):' in line:

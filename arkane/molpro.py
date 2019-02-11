@@ -167,7 +167,7 @@ class MolproLog(Log):
 
         return coord, number, mass
 
-    def loadConformer(self, symmetry=None, spinMultiplicity=0, opticalIsomers=None, symfromlog=None, label=''):
+    def loadConformer(self, symmetry=None, spinMultiplicity=0, opticalIsomers=None, label=''):
         """
         Load the molecular degree of freedom data from a log file created as
         the result of a MolPro "Freq" quantum chemistry calculation with the thermo printed.
@@ -226,8 +226,7 @@ class MolproLog(Log):
                         modes.append(translation)
                     # Read MolPro's estimate of the external symmetry number
                     elif 'Rotational Symmetry factor' in line and symmetry is None:
-                        if symfromlog is True:
-                            symmetry = int(float(line.split()[3]))
+                        symmetry = int(float(line.split()[3]))
 
                     # Read moments of inertia for external rotational modes
                     elif 'Rotational Constants' in line and line.split()[-1]=='[GHz]':
